@@ -30,7 +30,7 @@ public class NewsScoreCalculationControllerUnitTest
                 new(MeasurementType.RR, 5)
             }
         );
-        var res = _newsScoreCalculationController.GetNewsScore(measurementsRequest);
+        var res = _newsScoreCalculationController.CalculateNewsScore(measurementsRequest);
 
         Assert.IsType<BadRequest<string>>(res.Result);
         dynamic result = res.Result;
@@ -47,7 +47,7 @@ public class NewsScoreCalculationControllerUnitTest
                 new(MeasurementType.HR, 60),
             }
         );
-        var res = _newsScoreCalculationController.GetNewsScore(measurementsRequest);
+        var res = _newsScoreCalculationController.CalculateNewsScore(measurementsRequest);
 
         Assert.IsType<BadRequest<string>>(res.Result);
         dynamic result = res.Result;
@@ -66,7 +66,7 @@ public class NewsScoreCalculationControllerUnitTest
                 new(MeasurementType.RR, 6)
             }
         );
-        var res = _newsScoreCalculationController.GetNewsScore(measurementsRequest);
+        var res = _newsScoreCalculationController.CalculateNewsScore(measurementsRequest);
 
         Assert.IsType<BadRequest<string>>(res.Result);
         dynamic result = res.Result;
@@ -85,7 +85,7 @@ public class NewsScoreCalculationControllerUnitTest
             }
         );
 
-        var res = _newsScoreCalculationController.GetNewsScore(measurementsRequest);
+        var res = _newsScoreCalculationController.CalculateNewsScore(measurementsRequest);
 
         Assert.IsType<Ok<ScoreResult>>(res.Result);
         dynamic result = res.Result;

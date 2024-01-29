@@ -6,39 +6,41 @@ using Microsoft.AspNetCore.Mvc;
 namespace HealthMonitoring.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("measurements")]
 public class NewsScoreCalculationController : Controller
 {
     private readonly IConfiguration _configuration;
-    
+
     public NewsScoreCalculationController(IConfiguration configuration)
     {
         _configuration = configuration;
     }
-    [HttpGet(Name = "GetNewsScore")]
+
+    [HttpPost]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public Results<BadRequest<string>, Ok<ScoreResult>> GetNewsScore(MeasurementsRequest measurementsRequest)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public Results<BadRequest<string>, Ok<ScoreResult>> CalculateNewsScore([FromBody] MeasurementsRequest measurementsRequest)
     {
-       try
-       {
-           var (errors, score) = ProcessMeasurements(measurementsRequest.Measurements);
-           if (errors.Any())
-           {
-               return TypedResults.BadRequest(string.Join(',', errors));
-           }
-           return TypedResults.Ok(new ScoreResult
-           { 
-               Score = score
-           });
-       } 
-       catch (Exception e)
-       { 
-           return TypedResults.BadRequest(e.Message);
-       }
+        try
+        {
+            var (errors, score) = ProcessMeasurements(measurementsRequest.Measurements);
+            if (errors.Any())
+            {
+                return TypedResults.BadRequest(string.Join(',', errors));
+            }
+
+            return TypedResults.Ok(new ScoreResult
+            {
+                Score = score
+            });
+        }
+        catch (Exception e)
+        {
+            return TypedResults.BadRequest(e.Message);
+        }
     }
 
-    private (List<string>,int) ProcessMeasurements(List<Measurement> measurements)
+    private (List<string>, int) ProcessMeasurements(List<Measurement> measurements)
     {
         var measurementTypes = MeasurementTypeConfigReader.GetInstance(_configuration).MeasurementTypes;
         var newsScore = 0;
@@ -82,8 +84,9 @@ public class NewsScoreCalculationController : Controller
         {
             lstErrors.Add($"Missing Type: {type}");
         }
+
         return (lstErrors, newsScore);
-     }
+    }
 
     private static int? CalculateScore(MeasurementTypeConfig measurementTypeConfig, Measurement measurement)
     {
@@ -94,32 +97,33 @@ public class NewsScoreCalculationController : Controller
                 return range.Score;
             }
         }
+
         return null;
     }
-    
+
     private static int? CalculateScoreFast(Measurement measurement)
     {
-        return measurement.Type switch 
+        return measurement.Type switch
         {
-            MeasurementType.TEMP when measurement.Value is > 31 and <= 35  => 3,
-            MeasurementType.TEMP when measurement.Value is > 35 and <= 36  => 1,
-            MeasurementType.TEMP when measurement.Value is > 36 and <= 38  => 0,
-            MeasurementType.TEMP when measurement.Value is > 38 and <= 39  => 1,
-            MeasurementType.TEMP when measurement.Value is > 39 and <= 42  => 3,
-            
-            MeasurementType.HR when measurement.Value is > 25 and <= 40  => 3,
-            MeasurementType.HR when measurement.Value is > 40 and <= 50  => 1,
-            MeasurementType.HR when measurement.Value is > 50 and <= 90  => 0,
-            MeasurementType.HR when measurement.Value is > 90 and <= 110  => 1,
-            MeasurementType.HR when measurement.Value is > 110 and <= 130  => 2,
-            MeasurementType.HR when measurement.Value is > 130 and <= 220  => 3,
-            
-            MeasurementType.RR when measurement.Value is > 3 and <= 8  => 3,
-            MeasurementType.HR when measurement.Value is > 8 and <= 11  => 1,
-            MeasurementType.HR when measurement.Value is > 11 and <= 20  => 0,
-            MeasurementType.HR when measurement.Value is > 20 and <= 24  => 2,
-            MeasurementType.HR when measurement.Value is > 24 and <= 60  => 3,
-            
+            MeasurementType.TEMP when measurement.Value is > 31 and <= 35 => 3,
+            MeasurementType.TEMP when measurement.Value is > 35 and <= 36 => 1,
+            MeasurementType.TEMP when measurement.Value is > 36 and <= 38 => 0,
+            MeasurementType.TEMP when measurement.Value is > 38 and <= 39 => 1,
+            MeasurementType.TEMP when measurement.Value is > 39 and <= 42 => 3,
+
+            MeasurementType.HR when measurement.Value is > 25 and <= 40 => 3,
+            MeasurementType.HR when measurement.Value is > 40 and <= 50 => 1,
+            MeasurementType.HR when measurement.Value is > 50 and <= 90 => 0,
+            MeasurementType.HR when measurement.Value is > 90 and <= 110 => 1,
+            MeasurementType.HR when measurement.Value is > 110 and <= 130 => 2,
+            MeasurementType.HR when measurement.Value is > 130 and <= 220 => 3,
+
+            MeasurementType.RR when measurement.Value is > 3 and <= 8 => 3,
+            MeasurementType.HR when measurement.Value is > 8 and <= 11 => 1,
+            MeasurementType.HR when measurement.Value is > 11 and <= 20 => 0,
+            MeasurementType.HR when measurement.Value is > 20 and <= 24 => 2,
+            MeasurementType.HR when measurement.Value is > 24 and <= 60 => 3,
+
             _ => null
         };
     }
