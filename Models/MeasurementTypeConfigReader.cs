@@ -6,14 +6,6 @@ public class MeasurementTypeConfigReader
 {
     private static MeasurementTypeConfigReader? _instance;
 
-    public static MeasurementTypeConfigReader GetInstance(IConfiguration configuration)
-    {
-        return _instance ??= new MeasurementTypeConfigReader(configuration);
-    }
-
-    public ImmutableDictionary<MeasurementType, MeasurementTypeConfig> MeasurementTypes { get; }
-    public ImmutableDictionary<Measurement, int?> MeasurementToScoreMapping { get; }
-    
     private MeasurementTypeConfigReader(IConfiguration configuration)
     {
         var factory = LoggerFactory.Create(builder => {
@@ -22,8 +14,16 @@ public class MeasurementTypeConfigReader
         var logger = factory.CreateLogger<MeasurementTypeConfigReader>();
         logger.LogInformation("Loading measurement type configuration");
         MeasurementTypes = LoadMeasurementTypes(configuration);
-        MeasurementToScoreMapping = LoadMeasurementToScoreMapping(configuration);
+        MeasurementToScoreMapping = LoadMeasurementToScoreMapping(MeasurementTypes);
     }
+    
+    public static MeasurementTypeConfigReader GetInstance(IConfiguration configuration)
+    {
+        return _instance ??= new MeasurementTypeConfigReader(configuration);
+    }
+
+    public ImmutableDictionary<MeasurementType, MeasurementTypeConfig> MeasurementTypes { get; }
+    public ImmutableDictionary<Measurement, int> MeasurementToScoreMapping { get; }
     
     private static ImmutableDictionary<MeasurementType, MeasurementTypeConfig> LoadMeasurementTypes(IConfiguration configuration)
     {
@@ -34,10 +34,9 @@ public class MeasurementTypeConfigReader
         return measurementTypes.ToImmutableDictionary(x => x.Type);
     }
     
-    private static ImmutableDictionary<Measurement, int?> LoadMeasurementToScoreMapping(IConfiguration configuration)
+    private static ImmutableDictionary<Measurement, int> LoadMeasurementToScoreMapping(ImmutableDictionary<MeasurementType, MeasurementTypeConfig> measurementTypes)
     {
-        var mappings = new Dictionary<Measurement, int?>();
-        var measurementTypes = LoadMeasurementTypes(configuration);
+        var mappings = new Dictionary<Measurement, int>();
         foreach (var measurementTypeConfig in measurementTypes.Values)
         {
             foreach (var range in measurementTypeConfig.Ranges)

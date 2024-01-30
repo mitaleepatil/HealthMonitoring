@@ -120,4 +120,21 @@ public class NewsScoreCalculationControllerIntegrationTest
         var result = await response.Content.ReadAsStringAsync();
         Assert.Equal("\"Out of Range: 31 for Type: TEMP\"", result);
     }
+    
+    [Fact]
+    public async Task WhenDuplicateTypeName_DuplicateType_ErrorMessage()
+    {
+        // Arrange
+        var client = _factory.CreateClient(); 
+        const string json = """{ "measurements": [ { "type": "TEMP", "value": 37 }, { "type": "temp", "value": 37 }, { "type": "HR", "value": 60 }, { "type": "RR", "value": 5 } ] }""";
+        var data = new StringContent(json, Encoding.UTF8, "application/json");
+
+        // Act
+        var response = await client.PostAsync(_url, data);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var result = await response.Content.ReadAsStringAsync();
+        Assert.Equal("\"Duplicate Type: TEMP\"", result);
+    }
 }

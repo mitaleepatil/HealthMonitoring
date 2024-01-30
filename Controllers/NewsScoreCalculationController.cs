@@ -48,9 +48,8 @@ public class NewsScoreCalculationController : Controller
         var lstErrors = new List<string>();
         foreach (var measurement in measurements)
         {
-            var measurementType = measurementTypes.GetValueOrDefault(measurement.Type);
             // Type Validation
-            if (measurementType == null)
+            if (!measurementTypes.TryGetValue(measurement.Type, out var measurementType))
             {
                 lstErrors.Add($"Invalid Type: {measurement.Type}");
                 continue;
@@ -130,9 +129,12 @@ public class NewsScoreCalculationController : Controller
 
     private int? CalculateScoreVeryFast(Measurement measurement)
     {
-        return MeasurementTypeConfigReader
-            .GetInstance(_configuration)
-            .MeasurementToScoreMapping
-            .GetValueOrDefault(measurement, null);
+        if (MeasurementTypeConfigReader.GetInstance(_configuration).MeasurementToScoreMapping
+            .TryGetValue(measurement, out var score))
+        {
+            return score;
+        }
+
+        return null;
     }
 }
